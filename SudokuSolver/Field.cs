@@ -9,7 +9,7 @@ namespace SudokuSolver
 {
     class Field
     {
-        private Cell[,] _field;
+        public Cell[,] _field;
         private List<Section> _rows;
         private List<Section> _columns;
         private List<Section> _squares;
@@ -17,6 +17,11 @@ namespace SudokuSolver
         public int FilledCellsCount
         {
             get { return _field.OfType<Cell>().Count(cell => !cell.IsBlank); }
+        }
+
+        public bool IsFinished
+        {
+            get { return _field.OfType<Cell>().All(cell => !cell.IsBlank); }
         }
 
         public Field(int[,] values)
@@ -58,8 +63,8 @@ namespace SudokuSolver
                     rowCells.Add(_field[i, j]);
                     columnCells.Add(_field[j, i]);
                 }
-                _rows[i].AssignCells(rowCells);
-                _columns[i].AssignCells(columnCells);
+                _rows[i].SetCells(rowCells);
+                _columns[i].SetCells(columnCells);
                 rowCells = new List<Cell>();
                 columnCells = new List<Cell>();
             }
@@ -78,30 +83,50 @@ namespace SudokuSolver
                         }
                     }
 
-                    _squares[reg].AssignCells(squareCells);
-                    ++reg;
+                    _squares[reg].SetCells(squareCells);
+                    reg++;
                     squareCells = new List<Cell>();
+                }
+            }
+
+            reg = 0;
+            for (int i = 0; i < _field.GetLength(0); i++)
+            {
+                for (int j = 0; j < _field.GetLength(1); j++)
+                {
+                    if ((j % 2 == 0) && (j != 0))
+                    {
+                        reg++;
+                    }
+
+                    _field[i, j].SetSections(_rows[i], _columns[j], _squares[reg]);
+                }
+                if (i < 1)
+                {
+                    reg = 0;
+                }
+                else if (i < 3)
+                {
+                    reg = 2;
                 }
             }
         }
 
         public void RecalculateSections()
         {
-            foreach (var row in _rows)
-            {
-                row.RecalculatePossibilities();
-            }
-            foreach (var col in _columns)
-            {
-                col.RecalculatePossibilities();
-            }
-            foreach (var square in _squares)
-            {
-                square.RecalculatePossibilities();
-            }
+            _rows.ForEach(r => r.RecalculatePossibilities());
+            _columns.ForEach(c => c.RecalculatePossibilities());
+            _squares.ForEach(s => s.RecalculatePossibilities());
         }
 
-        public void PrintEverything()
+        public void RecalculateUsingSinglePossibility()
+        {
+            _rows.ForEach(r => r.AssignSinglePossibility());
+            _columns.ForEach(c => c.AssignSinglePossibility());
+            _squares.ForEach(s => s.AssignSinglePossibility());
+        }
+
+        public void Print()
         {
             Console.WriteLine();
             int row = 0;
@@ -154,7 +179,7 @@ namespace SudokuSolver
             }
         }
 
-        //public void PrintEverything()
+        //public void Print()
         //{
         //    Console.WriteLine();
         //    int row = 0;

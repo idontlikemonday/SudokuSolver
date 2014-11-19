@@ -12,25 +12,17 @@ namespace SudokuSolver
 
         public List<Cell> Cells { get; set; }
 
-        public Section()
-        {
-            //Cells = new List<Cell>();
-            //for (int i = 0; i < Util.Length; i++)
-            //{
-            //    Cells.Add(new Cell());
-            //}
-        }
-
         public Section(SectionType type)
         {
             Type = type;
         }
 
-        public void AssignCells(List<Cell> cells)
+        public void SetCells(List<Cell> cells)
         {
             Cells = cells;
         }
 
+        /// <summary> Removes possible value from cells, if another cell into current section has the same value. Then if only one possible value left, assign it </summary>
         public void RecalculatePossibilities()
         {
             foreach (var cell in Cells)
@@ -44,8 +36,23 @@ namespace SudokuSolver
             {
                 if (cell.PossibleValues.Count == 1)
                 {
-                    cell.Value = cell.PossibleValues.First();
-                    cell.PossibleValues.Remove(cell.Value);
+                    cell.AssignValue(cell.PossibleValues.First());
+                }
+            }
+        }
+
+        /// <summary> Assigns a value to the cell, that has the only possible value among the cells into current section </summary>
+        public void AssignSinglePossibility()
+        {
+            for (int i = 0; i < Cells.Count; i++)
+            {
+                var possibleValueCells = Cells
+                    .OfType<Cell>()
+                    .Where(cell => cell.PossibleValues.Contains(i + 1));
+
+                if (possibleValueCells.Count() == 1)
+                {
+                    possibleValueCells.First().AssignValue(i + 1);
                 }
             }
         }

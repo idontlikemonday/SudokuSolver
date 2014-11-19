@@ -19,16 +19,8 @@ namespace SudokuSolver
             //values[3, 3] = 4;
 
             var field = new Field(values);
-            field.PrintEverything();
-            Console.WriteLine(field.FilledCellsCount);
-
-            field.RecalculateSections();
-            field.PrintEverything();
-            Console.WriteLine(field.FilledCellsCount);
-
-            field.RecalculateSections();
-            field.PrintEverything();
-            Console.WriteLine(field.FilledCellsCount);
+            var solution = new Algorithm(field);
+            solution.Start();
 
             Console.ReadKey();
         }
