@@ -22,7 +22,11 @@ namespace SudokuSolver
         public Cell()
         {
             Value = 0;
-            PossibleValues = new List<int> {1, 2, 3, 4};
+            PossibleValues = new List<int>();
+            for (int i = 1; i <= Util.Length; i++)
+            {
+                PossibleValues.Add(i);
+            }
         }
 
         public Cell(int value)
@@ -55,5 +59,15 @@ namespace SudokuSolver
                 Square.AssignSinglePossibility();
             }
         }
+
+        //public void ForceCellValue(int value)
+        //{
+        //    if (IsBlank)
+        //    {
+        //        PossibleValues.Clear();
+        //        PossibleValues.Add(value);
+        //        AssignValue(value);
+        //    }
+        //}
     }
 }

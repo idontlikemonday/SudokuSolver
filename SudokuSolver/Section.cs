@@ -22,16 +22,28 @@ namespace SudokuSolver
             Cells = cells;
         }
 
-        /// <summary> Removes possible value from cells, if another cell into current section has the same value. Then if only one possible value left, assign it </summary>
         public void RecalculatePossibilities()
+        {
+            RemoveImpossiblePossibilities();
+            AssignIfSinglePossibilityLeft();
+        }
+
+        /// <summary> Removes possible value from cells, if another cell into current section has the same value </summary>
+        public void RemoveImpossiblePossibilities()
         {
             foreach (var cell in Cells)
             {
                 if (!cell.IsBlank)
                 {
-                    Cells.ForEach(cellToRecalc => cellToRecalc.PossibleValues.Remove(cell.Value));
+                    Cells.Where(cellToRecalc => cellToRecalc.PossibleValues.Count > 1).ToList()
+                        .ForEach(cellToRecalc => cellToRecalc.PossibleValues.Remove(cell.Value));
                 }
             }
+        }
+
+        /// <summary> Assigns value if only one possible variant left </summary>
+        private void AssignIfSinglePossibilityLeft()
+        {
             foreach (var cell in Cells)
             {
                 if (cell.PossibleValues.Count == 1)
@@ -48,12 +60,36 @@ namespace SudokuSolver
             {
                 var possibleValueCells = Cells
                     .OfType<Cell>()
+                    .Where(cell => cell.IsBlank)
                     .Where(cell => cell.PossibleValues.Contains(i + 1));
 
                 if (possibleValueCells.Count() == 1)
                 {
                     possibleValueCells.First().AssignValue(i + 1);
                 }
+            }
+        }
+
+        public bool SectionVerified()
+        {
+            int allValues = Cells.OfType<Cell>()
+                .Where(x => x.Value > 0)
+                .Select(x => x.Value).ToArray()
+                .Count();
+
+            int distinctValues = Cells.OfType<Cell>()
+                .Where(x => x.Value > 0)
+                .Select(x => x.Value).ToArray()
+                .Distinct()
+                .Count();
+
+            if (allValues == distinctValues)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
     }

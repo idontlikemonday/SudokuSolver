@@ -8,36 +8,126 @@ namespace SudokuSolver
 {
     class Algorithm
     {
-        private Field _field;
+        private Field _baseField;
+        private Field _currentSolutionField;
+        private int _solutions;
+        private List<Cell> _blankCells;
 
         public Algorithm(Field field)
         {
-            _field = field;
+            _baseField = field;
         }
 
         public void Start()
         {
-            _field.Print();
-            Console.WriteLine(_field.FilledCellsCount);
+            _baseField.Print();
+            _baseField.RecalculateSections();
+            _baseField.Print();
 
-            _field.RecalculateSections();
-            _field.Print();
-            Console.WriteLine(_field.FilledCellsCount);
+            _currentSolutionField = _baseField.Copy();
 
-            _field.RecalculateSections();
-            _field.Print();
-            Console.WriteLine(_field.FilledCellsCount);
+            _blankCells = _baseField.BlankCells;
 
-            _field.RecalculateUsingSinglePossibility();
-            _field.Print();
-            Console.WriteLine(_field.FilledCellsCount);
+            Console.WriteLine("\tAlgorithm started...");
+            while (!_currentSolutionField.IsSolved())
+            {
+                int numBlankCells = _currentSolutionField.FilledCellsCount;
 
-            _field._field[3, 3].PossibleValues.Remove(1);
-            _field.RecalculateSections();
-            _field.RecalculateUsingSinglePossibility();
-            _field.Print();
-            Console.WriteLine(_field.FilledCellsCount);
+                _currentSolutionField.RecalculateUsingSinglePossibility();
+                _currentSolutionField.Print();
 
+                if (numBlankCells == _currentSolutionField.FilledCellsCount)
+                {
+                    RecursiveGuess(_currentSolutionField, 0);
+                }
+
+                if (_currentSolutionField.IsFinished && !_currentSolutionField.IsSolved())
+                {
+                    Restart();
+                }
+            }
+
+            if (_currentSolutionField.IsFinished && _currentSolutionField.IsSolved())
+            {
+                Console.WriteLine("\t{0} solutions", _solutions);
+                _currentSolutionField.Print();
+            }
+        }
+
+        public void Restart()
+        {
+            _currentSolutionField = _baseField.Copy();
+            _blankCells = _currentSolutionField.BlankCells;
+            Start();
+        }
+
+        public void RecursiveGuess(Field previous, int previousGuess)
+        {
+            bool blocked = false;
+            bool fullyBlocked = false;
+            int currentGuess = 0;
+            Field tempField = null;
+
+            if (previous.CurrentlyVerified())
+            {
+                if (!previous.IsFinished)
+                {
+                    tempField = previous.Copy();
+
+                    _blankCells = tempField.BlankCells;
+                    if (previousGuess != 0)
+                    {
+                        currentGuess = _blankCells.First().PossibleValues.Find(x => x > previousGuess);
+                        if (currentGuess == 0)
+                        {
+                            fullyBlocked = true;
+                        }
+                    }
+                    else if (currentGuess < _blankCells.First().PossibleValues.First())
+                    {
+                        currentGuess = _blankCells.First().PossibleValues.First();
+                    }
+
+                    if (currentGuess != 0)
+                    {
+                        _blankCells.First().AssignValue(currentGuess);
+                    }
+                    else
+                    {
+                        blocked = true;
+                    }
+
+                    if (tempField.IsFinished && !tempField.IsSolved())
+                    {
+                        blocked = true;
+                    }
+
+                    if (!blocked)
+                    {
+                        RecursiveGuess(tempField, 0);
+                    }
+                }
+                else if (previous.IsSolved())
+                {
+                    fullyBlocked = true;
+
+                    if (!previous.Equals(tempField))
+                    {
+                        _currentSolutionField = previous.Copy();
+                    }
+
+                    _solutions++;
+                }
+            }
+            else
+            {
+                fullyBlocked = true;
+            }
+
+            if (!fullyBlocked)
+            {
+                RecursiveGuess(previous, currentGuess);
+            }
         }
     }
 }
